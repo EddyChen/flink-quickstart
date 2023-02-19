@@ -1,4 +1,17 @@
 
+## app generate
+
+```bash
+mvn archetype:generate \
+    -DarchetypeGroupId=org.apache.flink \
+    -DarchetypeArtifactId=flink-quickstart-java \
+    -DarchetypeVersion=1.16.0 \
+    -DgroupId=cn.chenruifeng \
+    -DartifactId=flink-quickstart \
+    -Dversion=1.0.0 \
+    -Dpackage=cn.chenruifeng.flinkquickstart \
+    -DinteractiveMode=false
+```
 
 ## kafka commands
 
