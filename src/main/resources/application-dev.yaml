@@ -1,0 +1,13 @@
+
+flink:
+  application:
+    name: yys-flink
+  source:
+    kafka:
+      bootstrapServer: 107.6.141.114:21005,107.6.141.115:21005,107.6.141.116:21005
+      topic: tpbiz-icbchq-credit-card-pay
+      groupId: group0
+  destination:
+    kafka:
+      bootstrapServer: 107.6.141.114:21005,107.6.141.115:21005,107.6.141.116:21005
+      topic: tpbiz-shfh-yys-report

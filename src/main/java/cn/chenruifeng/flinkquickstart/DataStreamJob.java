@@ -18,6 +18,16 @@
 
 package cn.chenruifeng.flinkquickstart;
 
+import cn.chenruifeng.flinkquickstart.config.ConfigLoader;
+import cn.chenruifeng.flinkquickstart.config.YamlConfig;
+import cn.chenruifeng.flinkquickstart.exception.GeneralException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.MapFunction;
@@ -31,8 +41,6 @@ import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsIni
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.util.Collector;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Skeleton for a Flink DataStream Job.
@@ -46,21 +54,39 @@ import org.slf4j.LoggerFactory;
  * <p>If you change the name of the main class (with the public static void main(String[] args))
  * method, change the respective entry in the POM.xml file (simply search for 'mainClass').
  */
+@Slf4j
 public class DataStreamJob {
 
-	private static final Logger log = LoggerFactory.getLogger(DataStreamJob.class);
+	public static void main(String[] args) {
+		CommandLineParser parser = new DefaultParser();
+		Options options = new Options();
+		options.addOption("profile", true, "config profiles");
+		CommandLine cmd = null;
+		try {
+			cmd = parser.parse(options, args);
+		} catch (ParseException e) {
+			log.info(e.getMessage());
+			throw new GeneralException("CMD_ERROR", "读取命令行参数失败", e);
+		}
+		String profile = cmd.getOptionValue("profile");
+		log.info("Flink Application Profile Active: {}", profile);
 
-	public static void main(String[] args) throws Exception {
+		String filename = StringUtils.isEmpty(profile) ?
+				"application.yaml" :
+				String.format("application-%s.yaml", profile);
+
+		ConfigLoader configLoader = new ConfigLoader();
+		YamlConfig yamlConfig = configLoader.load(filename);
+		log.info("Load Config File: {}", yamlConfig);
+
 		// Sets up the execution environment, which is the main entry point
 		// to building Flink applications.
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-		// DataStream<String> stream = env.socketTextStream("192.168.12.128", 9999);
-
 		KafkaSource<String> source = KafkaSource.<String>builder()
-				.setBootstrapServers("192.168.12.128:9092")
-				.setTopics("lines")
-				.setGroupId("group1")
+				.setBootstrapServers("localhost:9092")
+				.setTopics("tpbiz-icbchq-credit-card-pay")
+				.setGroupId("group0")
 				.setStartingOffsets(OffsetsInitializer.earliest())
 				.setValueOnlyDeserializer(new SimpleStringSchema())
 				.build();
@@ -68,9 +94,9 @@ public class DataStreamJob {
 		DataStream<String> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
 
 		KafkaSink<String> sink = KafkaSink.<String>builder()
-				.setBootstrapServers("192.168.12.128:9092")
+				.setBootstrapServers("localhost:9092")
 				.setRecordSerializer(KafkaRecordSerializationSchema.builder()
-						.setTopic("words")
+						.setTopic("tpbiz-shfh-yys-report")
 						.setKeySerializationSchema(new SimpleStringSchema())
 						.setValueSerializationSchema(new SimpleStringSchema())
 						.build()
@@ -85,7 +111,12 @@ public class DataStreamJob {
 				.sinkTo(sink);
 
 		// Execute program, beginning computation.
-		env.execute("Flink Java API Skeleton");
+		try {
+			env.execute("Flink Java API Skeleton");
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw new GeneralException("FLINK_ERROR", "流程序运行失败", e);
+		}
 	}
 
 	public static class Tokenizer implements FlatMapFunction<String, Tuple2<String, Integer>> {

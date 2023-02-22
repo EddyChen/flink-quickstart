@@ -58,3 +58,53 @@ volumes:
   kafka_data:
     driver: local
 ```
+
+## Mac Kafka Local
+
+```bash
+brew install kafka
+
+brew services start zookeeper
+brew services start kafka
+
+zookeeper-server-start /usr/local/etc/kafka/zookeeper.properties 
+kafka-server-start /usr/local/etc/kafka/server.properties
+
+
+ 
+```
+
+## Upload Flink Dist jars for Local Debug
+```xml
+<dependencies>
+  
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-dist</artifactId>
+      <version>1.16.1</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-shaded-zookeeper-3</artifactId>
+      <version>3.5.9-15.0</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-shaded-guava</artifactId>
+      <version>30.1.1-jre-15.0</version>
+      <scope>test</scope>
+    </dependency>
+  
+</dependencies>
+```
