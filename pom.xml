@@ -156,8 +156,8 @@ under the License.
   </dependencies>
 
   <build>
+    <finalName>flink-quickstart</finalName>
     <plugins>
-
       <!-- Java Compiler -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
