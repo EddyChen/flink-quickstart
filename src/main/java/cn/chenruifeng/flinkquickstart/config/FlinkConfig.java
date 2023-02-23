@@ -11,4 +11,6 @@ public class FlinkConfig {
 
   private FlinkConnector destination;
 
+  private FlinkConnector dimension;
+
 }

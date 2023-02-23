@@ -11,3 +11,7 @@ flink:
     kafka:
       bootstrapServer: localhost:9092
       topic: tpbiz-shfh-yys-report
+  dimension:
+    redis:
+      host: localhost
+      port: 6379

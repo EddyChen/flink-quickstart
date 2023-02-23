@@ -7,4 +7,6 @@ public class FlinkConnector {
 
   private KafkaConnector kafka;
 
+  private RedisConnector redis;
+
 }

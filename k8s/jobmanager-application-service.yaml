@@ -14,7 +14,7 @@ spec:
         - name: jobmanager
           image: apache/flink:1.16.0
           env:
-          args: ["standalone-job", "--job-classname", "cn.chenruifeng.flinkquickstart.DataStreamJob"]
+          args: ["standalone-job", "--job-classname", "cn.chenruifeng.flinkquickstart.DataStreamJob", "-profile", "dev"]
           ports:
             - containerPort: 6123
               name: rpc

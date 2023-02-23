@@ -29,6 +29,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
@@ -41,6 +42,7 @@ import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsIni
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.util.Collector;
+import redis.clients.jedis.Jedis;
 
 /**
  * Skeleton for a Flink DataStream Job.
@@ -84,9 +86,9 @@ public class DataStreamJob {
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
 		KafkaSource<String> source = KafkaSource.<String>builder()
-				.setBootstrapServers("localhost:9092")
-				.setTopics("tpbiz-icbchq-credit-card-pay")
-				.setGroupId("group0")
+				.setBootstrapServers(yamlConfig.getFlink().getSource().getKafka().getBootstrapServer())
+				.setTopics(yamlConfig.getFlink().getSource().getKafka().getTopic())
+				.setGroupId(yamlConfig.getFlink().getSource().getKafka().getGroupId())
 				.setStartingOffsets(OffsetsInitializer.earliest())
 				.setValueOnlyDeserializer(new SimpleStringSchema())
 				.build();
@@ -94,9 +96,9 @@ public class DataStreamJob {
 		DataStream<String> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
 
 		KafkaSink<String> sink = KafkaSink.<String>builder()
-				.setBootstrapServers("localhost:9092")
+				.setBootstrapServers(yamlConfig.getFlink().getDestination().getKafka().getBootstrapServer())
 				.setRecordSerializer(KafkaRecordSerializationSchema.builder()
-						.setTopic("tpbiz-shfh-yys-report")
+						.setTopic(yamlConfig.getFlink().getDestination().getKafka().getTopic())
 						.setKeySerializationSchema(new SimpleStringSchema())
 						.setValueSerializationSchema(new SimpleStringSchema())
 						.build()
@@ -104,7 +106,11 @@ public class DataStreamJob {
 				.setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
 				.build();
 
-		stream.flatMap(new Tokenizer())
+		String host = yamlConfig.getFlink().getDimension().getRedis().getHost();
+		int port = yamlConfig.getFlink().getDimension().getRedis().getPort();
+
+		stream.filter(new WordsFilter(host, port))
+				.flatMap(new Tokenizer())
 				.keyBy(r -> r.f0)
 				.sum(1)
 				.map(new TupleSerialize())
@@ -116,6 +122,22 @@ public class DataStreamJob {
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			throw new GeneralException("FLINK_ERROR", "流程序运行失败", e);
+		}
+	}
+
+	public static class WordsFilter implements FilterFunction<String> {
+		private String host;
+		private int port;
+
+		public WordsFilter(String host, int port) {
+			this.host = host;
+			this.port = port;
+		}
+
+		@Override
+		public boolean filter(String s) throws Exception {
+			Jedis jedis = new Jedis(host, port);
+			return StringUtils.isNotEmpty(jedis.get(s));
 		}
 	}
 

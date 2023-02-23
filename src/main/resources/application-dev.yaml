@@ -11,3 +11,7 @@ flink:
     kafka:
       bootstrapServer: 107.6.141.114:21005,107.6.141.115:21005,107.6.141.116:21005
       topic: tpbiz-shfh-yys-report
+  dimension:
+    redis:
+      host: 107.6.141.114
+      port: 6379
