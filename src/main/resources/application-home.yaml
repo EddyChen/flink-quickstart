@@ -1,0 +1,17 @@
+
+flink:
+  application:
+    name: yys-flink
+  source:
+    kafka:
+      bootstrapServer: 192.168.12.128:9092
+      topic: tpbiz-icbchq-credit-card-pay
+      groupId: group0
+  destination:
+    kafka:
+      bootstrapServer: 192.168.12.128:9092
+      topic: tpbiz-shfh-yys-report
+  dimension:
+    redis:
+      host: 192.168.12.128
+      port: 6379
