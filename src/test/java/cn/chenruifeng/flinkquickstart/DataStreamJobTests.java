@@ -6,7 +6,7 @@ public class DataStreamJobTests {
 
   @Test
   public void testMain() {
-    DataStreamJob.main(new String[]{"-profile", "local"});
+    DataStreamJob.main(new String[]{"-profile", "home"});
 
   }
 }
